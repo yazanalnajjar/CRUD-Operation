@@ -1,0 +1,133 @@
+﻿
+@{
+    ViewBag.Title = "User List";
+}
+
+<h2>User CRUD</h2>
+
+<a class="btn btn-success" style="margin-bottom : 10px" onclick="PopupForm('@Url.Action("AddOrEdit" , "User")')"><i class="fa fa-plus"></i>Add Name</a>
+<table id="userTable" class="table table-striped table-bordered" style="width:100%"> /User/AddOrEdit
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Age</th>
+            <th>Country</th>
+
+        </tr>
+    </thead>
+</table>
+
+
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"/>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+@section scripts{
+
+        <script>
+            var Popup, dataTable;
+            $(document).ready(function () {
+                $('#userTable').DataTable({
+
+                    "ajax": {
+                        "url": "/User/GetData",
+                        "type": "GET",
+                        "datatype": "json"
+                    },
+                    "columns": [
+                        { "data": "Name" },
+                        { "data": "Email" },
+                        { "data": "Age" },
+                        {"data":"CountryID" , "render" : function (data) {
+                        return "<a class='btn btn-default btn-sm' onclick=PopupForm('@Url.Action("AddOrEdit","Employee")/" + data + "')><i class='fa fa-pencil'></i> Edit</a><a class='btn btn-danger btn-sm' style='margin-left:5px' onclick=Delete("+data+")><i class='fa fa-trash'></i> Delete</a>";
+                    },
+                        "orderable": false,
+                        "searchable":false,
+                        "width":"150px"
+                    }
+
+
+                    ],
+                    "language": {
+                        "emptyTable": "No data found , Please clock on <b>Add New </b> Button"
+                    }
+                });
+            });
+
+            function PopupForm(url) {
+                var formDiv = $('<div/>');
+                $.get(url)
+                    .done(function (response) {
+                        formDiv.html(response);
+
+                        Popup = formDiv.dialog({
+                            autoOpen: true,
+                            resizable: false,
+                            title: 'Fill User Details',
+                            height: 500,
+                            width: 700,
+                            close: function () {
+                                Popup.dialog('destroy').remove();
+                            }
+
+                        });
+                    });
+            }
+
+
+            function SubmitForm(form) {
+                $.validator.unobtrusive.parse(form);
+                if ($(form).valid()) {
+                    $.ajax({
+                        type: "POST",
+                        url: form.action,
+                        data: $(form).serialize(),
+                        success: function (data) {
+                            if (data.success) {
+                                Popup.dialog('close');
+                                dataTable.ajax.reload();
+
+                                $.notify(data.message, {
+                                    globalPosition: "top center",
+                                    className: "success"
+                                })
+
+                            }
+                        }
+                    });
+                }
+                return false;
+            }
+
+
+             function Delete(id) {
+            if(confirm('Are You Sure to Delete this User Record ?'))
+            {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("Delete","Users")/' + id,
+                    success: function (data) {
+                        if (data.success)
+                        {
+                            dataTable.ajax.reload();
+
+                            $.notify(data.message, {
+                                globalPosition: "top center",
+                                className: "success"
+                            })
+
+                        }
+                    }
+
+                });
+            }
+        }
+
+
+
+
+        </script>
+        <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
+    }
+
